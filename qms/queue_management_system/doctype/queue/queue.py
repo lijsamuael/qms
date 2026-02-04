@@ -165,7 +165,7 @@ def call_again(ticket_name):
     queue_call = frappe.get_all(
         "Queue Call",
         filters={"ticket_number": ticket_name},
-        fields=["name", "number_of_calls"],
+        fields=["name", "number_of_calls", "ticket_id"],
         order_by="creation desc",
         limit=1,
     )
@@ -179,13 +179,18 @@ def call_again(ticket_name):
     queue_call_doc.number_of_calls = (queue_call_doc.number_of_calls or 0) + 1
     queue_call_doc.save()
 
+    # Get assigned_office from the linked Queue document
+    assigned_office = None
+    if queue_call_doc.ticket_id:
+        assigned_office = frappe.db.get_value("Queue", queue_call_doc.ticket_id, "assigned_office")
+
     # Republish real-time event to notify the UI
     frappe.publish_realtime(
         event="queue_call",
         message={
             "ticket_number": ticket_name,
             "audio_file": queue_call_doc.audio_file,
-            "assigned_office": queue_call_doc.assigned_office,
+            "assigned_office": assigned_office,
         },
     )
 

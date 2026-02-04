@@ -1,27 +1,49 @@
-<!DOCTYPE html>
-<html lang="en">
-	<head>
-		<meta charset="UTF-8" />
-		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-		<title>Queue Dashboard</title>
-		<!-- Link to the CSS file -->
-		<link rel="stylesheet" href="queue_dashboard.css" />
-	</head>
-	<body>
-		<div id="queue-dashboard" class="queue-dashboard">
-			<div id="now_serving" class="now-serving">
-				<h2>Now Serving Ticket Number: <span class="current_ticket">#12345</span></h2>
-				<audio class="ticket_audio" controls></audio>
-			</div>
-			<div id="queue_list" class="queue-list">
-				<h3>Queue Call Listkjdhfkshkfjs</h3>
-				<div class="queue-items">
-					<!-- Queue items will be dynamically added here -->
-				</div>
+{% extends "templates/web.html" %}
+
+{% block page_content %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+<link rel="stylesheet" href="/assets/qms/css/queue_dashboard.css">
+
+<div id="queue-dashboard" class="queue-dashboard">
+	<!-- Left Section: Active Queue -->
+	<div class="left-section">
+		<div class="active-queue-header">
+			<h2>
+				<i class="fa fa-bell"></i>
+				Active Queue
+			</h2>
+		</div>
+		
+		<div class="audio-player-container">
+			<audio class="ticket_audio" controls></audio>
+		</div>
+		
+		<div class="queue-items-container">
+			<div class="queue-items" id="queue-items">
+				<!-- Queue items will be dynamically added here -->
 			</div>
 		</div>
+	</div>
 
-		<!-- Link to the JavaScript file -->
-		<script src="queue_dashboard.js"></script>
-	</body>
-</html>
+	<!-- Right Section: Welcome & Video -->
+	<div class="right-section">
+		<div class="welcome-section">
+			<h1>Welcome to Our System</h1>
+			<p class="welcome-message">
+				Please relax and watch the screen. When your ticket number appears or is called, 
+				proceed to the designated office. Thank you for your patience! 😊
+			</p>
+		</div>
+		
+		<div class="video-container">
+			<iframe 
+				class="youtube-video" 
+				src="https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1&mute=1&loop=1&playlist=dQw4w9WgXcQ" 
+				frameborder="0" 
+				allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+				allowfullscreen>
+			</iframe>
+		</div>
+	</div>
+</div>
+{% endblock %}

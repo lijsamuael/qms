@@ -18,9 +18,10 @@ def call_next(department, name):
 
         # Create Queue Call
         queue_call = frappe.new_doc("Queue Call")
-        queue_call.ticket_number = ticket.name
+        queue_call.ticket_id = ticket.name
+        queue_call.ticket_number = ticket.ticket_number
         queue_call.called_time = frappe.utils.now()
-        queue_call.assigned_office = name
+        queue_call.department = department
         queue_call.save()
 
         # Update office status
@@ -43,20 +44,23 @@ def call_next(department, name):
         queue_call.is_private = 0
         queue_call.save()
 
+        # Get assigned_office from Queue document
+        assigned_office = frappe.db.get_value("Queue", ticket.name, "assigned_office")
+        
         # Notify via WebSocket
         frappe.publish_realtime(
         event="queue_call",
             message={
-                "ticket_number": name,
+                "ticket_number": ticket.ticket_number,
                 "audio_file": queue_call.audio_file,
-                "assigned_office": queue_call.assigned_office,
+                "assigned_office": assigned_office,
             },
         )    
         frappe.publish_realtime(
             event="queue_list",
             message={
-                "ticket_number": name,
-                "assigned_office": queue_call.assigned_office,
+                "ticket_number": ticket.ticket_number,
+                "assigned_office": assigned_office,
             },
         )
 
@@ -70,7 +74,7 @@ def call_again(ticket_name):
     queue_call = frappe.get_all(
         "Queue Call",
         filters={"ticket_number": ticket_name},
-        fields=["name", "number_of_calls"],
+        fields=["name", "number_of_calls", "ticket_id"],
         order_by="creation desc",
         limit=1,
     )
@@ -84,13 +88,18 @@ def call_again(ticket_name):
     queue_call_doc.number_of_calls = (queue_call_doc.number_of_calls or 0) + 1
     queue_call_doc.save()
 
+    # Get assigned_office from the linked Queue document
+    assigned_office = None
+    if queue_call_doc.ticket_id:
+        assigned_office = frappe.db.get_value("Queue", queue_call_doc.ticket_id, "assigned_office")
+
     # Republish real-time event to notify the UI
     frappe.publish_realtime(
         event="queue_call",
         message={
             "ticket_number": ticket_name,
             "audio_file": queue_call_doc.audio_file,
-            "assigned_office": queue_call_doc.assigned_office,
+            "assigned_office": assigned_office,
         },
     )
 

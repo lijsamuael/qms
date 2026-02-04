@@ -1,6 +1,7 @@
 {
  "actions": [],
  "allow_rename": 1,
+ "autoname": "field:name1",
  "creation": "2025-03-05 10:13:01.907282",
  "doctype": "DocType",
  "engine": "InnoDB",
@@ -17,7 +18,7 @@
   {
    "fieldname": "html_ujvh",
    "fieldtype": "HTML",
-   "options": "<link rel=\"stylesheet\" href=\"https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css\">\n\n<div class=\"container mt-4\">\n    <h2 class=\"mb-3 text-center\">Queue List</h2>\n    <table class=\"table table-bordered table-hover shadow-sm\">\n        <thead class=\"table-dark text-center\">\n            <tr>\n                <th>Ticket #</th>\n                <th>Department</th>\n                <th>Priority</th>\n                <th>Status</th>\n                <th>Date</th>\n                <th>Action</th>\n            </tr>\n        </thead>\n        <tbody id=\"queue-table-body\"></tbody>\n    </table>\n</div>\n\n<script>\nfunction fetchQueueList() {\n    frappe.call({\n        method: \"qms.queue_management_system.doctype.queue.queue.get_queue_list\",\n        args: { department: cur_frm.doc.name },\n        callback: function(response) {\n            if (response.message) {\n                console.log(\"Queue List Response:\", response.message);\n                const queueTableBody = document.getElementById(\"queue-table-body\");\n                queueTableBody.innerHTML = \"\";\n\n                response.message.forEach(queue => {\n                    const row = document.createElement(\"tr\");\n                    row.setAttribute(\"data-ticket\", queue.ticket_number);\n                    row.innerHTML = getQueueRowHTML(queue);\n                    queueTableBody.appendChild(row);\n                });\n            }\n        }\n    });\n}\n\n// Listen for real-time queue updates\nfrappe.realtime.on(\"queue\", function(data) {\n    console.log(\"Real-time queue update received:\", data);\n\n    // Clear the queue table\n    const queueTableBody = document.getElementById(\"queue-table-body\");\n    queueTableBody.innerHTML = \"\";\n\n    // Fetch the latest queue list\n    fetchQueueList();\n});\n\n// Function to generate HTML for a queue row\nfunction getQueueRowHTML(queue) {\n    return `\n        <td class=\"text-center fw-bold\">${queue.ticket_number}</td>\n        <td class=\"text-center\">${queue.department}</td>\n        <td class=\"text-center\">\n            <span class=\"badge border border-secondary p-2\">\n                <i class=\"fa-solid fa-exclamation-circle\"></i> ${queue.priority}\n            </span>\n        </td>\n        <td class=\"text-center queue-status\">\n            <span class=\"badge border border-secondary p-2\">\n                <i class=\"fa-solid fa-circle\"></i> ${queue.status}\n            </span>\n        </td>\n        <td class=\"text-center\">${frappe.datetime.str_to_user(queue.date)}</td>\n        <td class=\"text-center d-flex justify-content-center gap-2 action-buttons\">\n            ${getActionButtons(queue.name, queue.status)}\n        </td>\n    `;\n}\n\n// Generate Action Buttons Based on Status\nfunction getActionButtons(ticketNumber, status) {\n    const buttons = {\n        \"waiting\": [\n            { name: \"call\", icon: \"fa-phone\", color: \"btn-outline-primary\" }\n        ],\n        \"skipped\": [\n            { name: \"start\", icon: \"fa-play\", color: \"btn-outline-info\" }\n        ],\n        \"called\": [\n            { name: \"skip\", icon: \"fa-forward\", color: \"btn-outline-warning\" },\n            { name: \"start\", icon: \"fa-play\", color: \"btn-outline-info\" }\n        ],\n        \"being served\": [\n            { name: \"complete\", icon: \"fa-check\", color: \"btn-outline-success\" },\n            { name: \"transfer\", icon: \"fa-exchange-alt\", color: \"btn-outline-danger\", onclick: `openRemarkModal('${ticketNumber}')` }\n        ]\n    };\n\n    const actions = buttons[status.toLowerCase()] || [];\n    return actions.map(action =>\n        `<button class=\"btn ${action.color} btn-sm\" onclick=\"${action.onclick \n            ? action.onclick \n            : `handleAction('${action.name}', '${ticketNumber}', 'None')`\n        }\">\n            <i class=\"fa ${action.icon}\"></i>\n        </button>`\n    ).join('');\n}\n\n// Fetch available departments from the Departmennt doctype\nfunction fetchDepartments(callback) {\n    frappe.call({\n        method: \"frappe.client.get_list\",\n        args: {\n            doctype: \"Departmennt\",\n            fields: [\"name\"]\n        },\n        callback: function(response) {\n            if (response.message) {\n                const departmentOptions = response.message.map(dept => dept.name);\n                callback(departmentOptions);\n            }\n        }\n    });\n}\n\n// Open Frappe prompt for selecting a department as a remark\nfunction openRemarkModal(ticketNumber) {\n    fetchDepartments(function(departmentOptions) {\n        frappe.prompt([\n            {\n                label: 'Select Department',\n                fieldname: 'remark',\n                fieldtype: 'Select',\n                options: departmentOptions,\n                reqd: 1\n            }\n        ],\n        function(values) {\n            handleAction('transfer', ticketNumber, values.remark);\n        },\n        'Select Department to Transfer',\n        'Submit');\n    });\n}\n\n// Handle Actions\nfunction handleAction(action, ticketNumber, remark) {\n    console.log({ ticketNumber, remark });\n    frappe.call({\n        method: \"qms.queue_management_system.doctype.queue.queue.handle_action\",\n        args: { action: action, ticket_number: ticketNumber, remark: remark || \"None\" },\n        callback: function(response) {\n            console.log(\"response\", response);\n            frappe.msgprint(`Action '${action}' executed successfully for Ticket #${ticketNumber}`);\n        }\n    });\n}\n\n// Fetch queue list on page load\nfetchQueueList();\n</script>\n"
+   "options": "<link rel=\"stylesheet\" href=\"https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css\">\n\n<div class=\"container mt-4\">\n    <h2 class=\"mb-3 text-center\">Queue List</h2>\n    <table class=\"table table-bordered table-hover shadow-sm\">\n        <thead class=\"table-dark text-center\">\n            <tr>\n                <th>Ticket #</th>\n                <th>Department</th>\n                <th>Priority</th>\n                <th>Status</th>\n                <th>Date</th>\n                <th>Action</th>\n            </tr>\n        </thead>\n        <tbody id=\"queue-table-body\"></tbody>\n    </table>\n</div>\n"
   },
   {
    "fieldname": "section_break_iswe",
@@ -26,7 +27,8 @@
   {
    "fieldname": "name1",
    "fieldtype": "Data",
-   "label": "Name"
+   "label": "Name",
+   "unique": 1
   },
   {
    "fieldname": "office_number",
@@ -53,10 +55,11 @@
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-03-07 13:25:45.122746",
+ "modified": "2026-02-04 12:49:09.184158",
  "modified_by": "Administrator",
  "module": "Queue Management System",
  "name": "Departmennt",
+ "naming_rule": "By fieldname",
  "owner": "Administrator",
  "permissions": [
   {
