@@ -26,6 +26,7 @@ The Queue Management System (QMS) is an application built on the Frappe framewor
    ![Queue Call](https://github.com/user-attachments/assets/fa74fef6-e7ab-41e8-817b-a7a9d93183cf)
 
 4. **Realtime Update on Screen  with additional Audio functionality**:
+   You can get this at /queue_dashboard page.
    
    ![image](https://github.com/user-attachments/assets/a1655df7-62dd-4dec-872a-2f8dbb3336b9)
 
